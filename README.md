@@ -2,13 +2,6 @@
 
 An interactive, browser-based tool for exploring core **Number Theory** algorithms with full step-by-step solutions. No installation required — just open the HTML file in any browser.
 
-## 🚀 Live Demo
-
-> **[▶ Open the App](https://YOUR-USERNAME.github.io/number-theory-explorer/)**  
-> *(Replace with your actual GitHub Pages URL after publishing)*
-
----
-
 ## 📌 Features
 
 The explorer covers **9 core Number Theory topics**, each with detailed intermediate steps:
@@ -24,18 +17,6 @@ The explorer covers **9 core Number Theory topics**, each with detailed intermed
 | **Fermat's Little & Wilson's Theorem** | Verify theorems step-by-step for any prime |
 | **Legendre & Jacobi Symbols** | Quadratic residue checking with reciprocity |
 | **Diophantine Equations** | Solve ax + by = c in integers with general parametric solution |
-
----
-
-## 🖥️ How to Run Locally
-
-### Option 1 — VS Code + Live Server (Recommended)
-1. Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in VS Code
-2. Open `index.html` in VS Code
-3. Right-click → **"Open with Live Server"**
-
-### Option 2 — Just double-click
-- Double-click `index.html` — it opens directly in your browser. No setup needed.
 
 ---
 
@@ -108,4 +89,5 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 🙋 Author
 
 Made with ❤️ for students and enthusiasts of Number Theory.  
+
 Feel free to open issues or pull requests for improvements!
