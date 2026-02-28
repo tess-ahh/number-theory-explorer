@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Number Theory Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&family=Crimson+Pro:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c9a84c;--gold-light:#e8c97a;--cream:#ede8db;
+  --dim:#7a7060;--bg:#08080e;--card:#0f0f18;--card2:#14141f;
+  --border:#252230;--accent:#3d3060;--green:#2a6b4a;--red:#6b2a2a;
+  --text:#d8d2c4;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;min-height:100vh;overflow-x:hidden}
+
+/* Background grid */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+
+.app{max-width:1080px;margin:0 auto;padding:2rem 1.5rem 5rem;position:relative;z-index:1}
+
+/* ── HEADER ── */
+.header{text-align:center;padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem;position:relative}
+.header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:120px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.header h1{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:400;color:var(--gold);letter-spacing:.03em;line-height:1.2}
+.header h1 em{font-style:italic;color:var(--gold-light)}
+.header p{margin-top:.6rem;color:var(--dim);font-size:1rem;letter-spacing:.06em;font-family:'JetBrains Mono',monospace;font-size:.75rem}
+.header-ornament{color:var(--accent);font-size:1.4rem;letter-spacing:.3em;margin-bottom:.5rem;opacity:.7}
+
+/* ── TABS ── */
+.tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:2rem}
+.tab{background:var(--card);border:1px solid var(--border);color:var(--dim);padding:.45rem .9rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;transition:all .2s;letter-spacing:.04em;outline:none}
+.tab:hover{color:var(--cream);border-color:var(--accent)}
+.tab.active{background:var(--accent);border-color:var(--gold);color:var(--gold-light)}
+
+/* ── PANEL ── */
+.panel{background:var(--card);border:1px solid var(--border);padding:2rem;animation:fadeIn .3s ease;position:relative;overflow:hidden}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.panel h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);margin-bottom:.4rem;font-weight:400}
+.panel .desc{color:var(--dim);font-size:.9rem;margin-bottom:1.5rem;border-left:2px solid var(--accent);padding-left:.75rem;line-height:1.6}
+
+/* ── INPUTS ── */
+.inputs{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:.3rem}
+.field label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+.field input,.field select{background:#181824;border:1px solid var(--border);color:var(--cream);padding:.5rem .85rem;font-family:'JetBrains Mono',monospace;font-size:.88rem;width:120px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.field select{width:160px;cursor:pointer}
+.field input:focus,.field select:focus{border-color:var(--gold)}
+.field input.wide{width:80px}
+
+.btn{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:.5rem 1.4rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;cursor:pointer;letter-spacing:.08em;transition:all .2s;outline:none}
+.btn:hover{background:var(--gold);color:#08080e}
+.btn-sm{padding:.35rem .8rem;font-size:.7rem}
+.btn-accent{border-color:var(--accent);color:var(--text)}
+.btn-accent:hover{background:var(--accent);color:var(--cream)}
+
+/* ── RESULT ── */
+.result-box{margin-top:1.5rem;border:1px solid var(--border);background:#0a0a12;animation:fadeIn .25s ease}
+.result-header{background:var(--accent);padding:.55rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--gold-light);letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
+.result-answer{padding:.85rem 1.2rem;font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--gold-light);border-bottom:1px solid var(--border)}
+.steps{padding:.85rem 1.2rem;display:flex;flex-direction:column;gap:.35rem;max-height:300px;overflow-y:auto}
+.steps::-webkit-scrollbar{width:3px}
+.steps::-webkit-scrollbar-thumb{background:var(--accent)}
+.step{display:flex;gap:.7rem;align-items:flex-start;animation:slideIn .15s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+.step-num{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--accent);min-width:22px;padding-top:.15rem;border-right:1px solid var(--border);padding-right:.4rem}
+.step-msg{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--cream);line-height:1.55}
+
+.badge{display:inline-block;padding:.12rem .45rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.05em}
+.badge-prime{background:var(--green);color:#8effc8}
+.badge-composite{background:var(--red);color:#ffb0b0}
+.badge-yes{background:var(--green);color:#8effc8}
+.badge-no{background:var(--red);color:#ffb0b0}
+.badge-neutral{background:var(--accent);color:var(--gold-light)}
+
+.error{color:#ff7a7a;font-family:'JetBrains Mono',monospace;font-size:.78rem;padding:.65rem .9rem;border:1px solid var(--red);background:#180808;margin-top:.75rem}
+
+/* ── CRT TAGS ── */
+.crt-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem;min-height:28px}
+.crt-tag{background:var(--accent);color:var(--cream);font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:.28rem .6rem;cursor:pointer;border:1px solid transparent;transition:all .15s}
+.crt-tag:hover{border-color:var(--red);color:#ffb0b0}
+
+hr.divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;margin-top:1rem}
+table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:.75rem}
+th{background:var(--accent);color:var(--gold-light);padding:.4rem .7rem;text-align:left;font-weight:500;letter-spacing:.05em}
+td{padding:.35rem .7rem;border-bottom:1px solid var(--border);color:var(--text)}
+tr:hover td{background:#12121c}
+
+@media(max-width:600px){
+  .inputs{flex-direction:column;align-items:flex-start}
+  .field input,.field select{width:100%!important}
+  .btn{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-ornament">∞ ℕ ∑ ∏ ∫</div>
+    <h1><em>Number Theory</em> Concepts Explorer</h1>
+    <p>STEP-BY-STEP SOLUTIONS · GCD · PRIMES · MODULAR ARITHMETIC · CRT · DIOPHANTINE</p>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="panel" id="panel"></div>
+
+</div>
+
+<script>
+// ═══════════════════════ MATH UTILITIES ═══════════════════════
+
+function gcdEuclid(a,b){
+  const steps=[];let x=Math.abs(a),y=Math.abs(b);
+  while(y!==0){const q=Math.floor(x/y),r=x%y;steps.push({a:x,b:y,q,r});x=y;y=r;}
+  return{gcd:x,steps};
+}
+
+function extGcd(a,b){
+  const steps=[];
+  let or=a,r=b,os=1,s=0,ot=0,t=1;
+  while(r!==0){
+    const q=Math.floor(or/r);
+    steps.push({q,r:or,s:os,t:ot});
+    [or,r]=[r,or-q*r];[os,s]=[s,os-q*s];[ot,t]=[t,ot-q*t];
+  }
+  return{gcd:or,x:os,y:ot,steps};
+}
+
+function isPrime(n){
+  if(n<2)return false;if(n===2)return true;if(n%2===0)return false;
+  for(let i=3;i<=Math.sqrt(n);i+=2)if(n%i===0)return false;
+  return true;
+}
+
+function primalityTest(n){
+  const steps=[];
+  if(n<2)return{prime:false,steps:[{msg:`${n} < 2, not prime by definition`}]};
+  if(n===2)return{prime:true,steps:[{msg:`2 is the smallest and only even prime`}]};
+  if(n%2===0)return{prime:false,steps:[{msg:`${n} is even → divisible by 2 → composite`}]};
+  steps.push({msg:`Check odd divisors d from 3 up to √${n} ≈ ${Math.sqrt(n).toFixed(3)}`});
+  for(let i=3;i<=Math.sqrt(n);i+=2){
+    if(n%i===0){steps.push({msg:`${n} ÷ ${i} = ${n/i}  ✗  factor found → composite`});return{prime:false,steps};}
+    steps.push({msg:`${n} mod ${i} = ${n%i} ≠ 0`});
+  }
+  steps.push({msg:`No divisors found in range → ${n} is prime  ✓`});
+  return{prime:true,steps};
+}
+
+function factorize(n){
+  const factors=[],steps=[];let x=n,d=2;
+  while(d*d<=x){
+    while(x%d===0){factors.push(d);steps.push({msg:`${x} ÷ ${d} = ${x/d}`});x=Math.floor(x/d);}
+    d++;
+  }
+  if(x>1){factors.push(x);steps.push({msg:`Remaining factor: ${x} (prime)`});}
+  const map={};factors.forEach(f=>map[f]=(map[f]||0)+1);
+  const display=Object.entries(map).map(([p,e])=>e>1?`${p}^${e}`:`${p}`).join(' × ');
+  return{map,display,steps};
+}
+
+function modPow(base,exp,mod){
+  const steps=[];
+  let result=1,b=((base%mod)+mod)%mod,e=exp;
+  steps.push({msg:`Init: base = ${b} mod ${mod},  exp = ${e} (binary: ${e.toString(2)})`});
+  while(e>0){
+    if(e%2===1){const prev=result;result=(result*b)%mod;steps.push({msg:`LSB=1 → result = ${prev} × ${b} mod ${mod} = ${result}`});}
+    else steps.push({msg:`LSB=0 → result unchanged = ${result}`});
+    b=(b*b)%mod;e=Math.floor(e/2);
+    if(e>0)steps.push({msg:`Square: base = ${b},  remaining exp = ${e}`});
+  }
+  return{result,steps};
+}
+
+function eulerTotient(n){
+  const steps=[];const{map}=factorize(n);
+  steps.push({msg:`Factorization of ${n}: ${Object.entries(map).map(([p,e])=>`${p}^${e}`).join(' × ')}`});
+  steps.push({msg:`Formula: φ(n) = n · ∏(1 − 1/p) over distinct prime divisors p`});
+  let phi=n;
+  for(const p of Object.keys(map)){
+    const prev=phi;phi=phi/parseInt(p)*(parseInt(p)-1);
+    steps.push({msg:`p=${p}: φ = ${prev} × (1 − 1/${p}) = ${prev} × ${parseInt(p)-1}/${p} = ${phi}`});
+  }
+  return{phi,steps};
+}
+
+function linearCongruence(a,b,m){
+  const steps=[];const{gcd,x}=extGcd(Math.abs(a),Math.abs(m));
+  steps.push({msg:`Using Extended GCD: gcd(${a}, ${m}) = ${gcd}`});
+  if(b%gcd!==0)return{sols:null,steps:[...steps,{msg:`${gcd} does not divide ${b}  →  no solution`}]};
+  const scale=b/gcd,mod=m/gcd;
+  const x0=(((x*(scale))%mod)+mod)%mod;
+  steps.push({msg:`Particular solution: x₀ = ${x} × ${scale} mod ${mod} = ${x0}`});
+  const sols=[];
+  for(let i=0;i<gcd;i++){sols.push(x0+i*mod);steps.push({msg:`Solution ${i+1}: x ≡ ${x0+i*mod} (mod ${m})`});}
+  return{sols,mod,gcd,steps};
+}
+
+function crt(congs){
+  const steps=[];let N=1;
+  for(const{m}of congs)N*=m;
+  steps.push({msg:`Product N = ${congs.map(c=>c.m).join(' × ')} = ${N}`});
+  let x=0;
+  for(const{a,m}of congs){
+    const Ni=N/m;const{x:yi}=extGcd(Ni,m);
+    const yi_mod=((yi%m)+m)%m;
+    const term=a*Ni*yi_mod;x+=term;
+    steps.push({msg:`For x ≡ ${a} (mod ${m}):  N_i=${Ni},  inverse y_i=${yi_mod},  contribution=${term}`});
+  }
+  x=((x%N)+N)%N;
+  steps.push({msg:`Sum all contributions mod ${N}: x ≡ ${x} (mod ${N})`});
+  return{x,N,steps};
+}
+
+function legendreSymbol(a,p){
+  const steps=[];
+  if(!isPrime(p)||p===2)return{sym:null,steps:[{msg:`p must be an odd prime`}]};
+  const am=((a%p)+p)%p;steps.push({msg:`Reduce: a ≡ ${am} (mod ${p})`});
+  if(am===0){steps.push({msg:`a ≡ 0 (mod p)  →  symbol = 0`});return{sym:0,steps};}
+  const{result,steps:ps}=modPow(am,(p-1)/2,p);steps.push(...ps);
+  const sym=result===1?1:-1;
+  steps.push({msg:`${am}^((${p}−1)/2) ≡ ${result} (mod ${p})  →  symbol = ${sym}`});
+  steps.push({msg:sym===1?`${a} IS a quadratic residue mod ${p}`:`${a} is NOT a quadratic residue mod ${p}`});
+  return{sym,steps};
+}
+
+function jacobiSymbol(a,n){
+  const steps=[];let result=1,aa=((a%n)+n)%n,nn=n;
+  steps.push({msg:`Compute Jacobi (${a}/${n});  initial a mod n = ${aa}`});
+  while(aa!==0){
+    while(aa%2===0){
+      aa=Math.floor(aa/2);const r=nn%8;
+      if(r===3||r===5){result=-result;steps.push({msg:`Pull factor 2: n mod 8=${r}  →  sign flips to ${result}`});}
+      else steps.push({msg:`Pull factor 2: n mod 8=${r}  →  sign stays ${result}`});
+    }
+    [aa,nn]=[nn,aa];steps.push({msg:`Reciprocity swap: now (${nn}/${aa})`});
+    if(aa%4===3&&nn%4===3){result=-result;steps.push({msg:`Both ≡ 3 mod 4  →  sign flips to ${result}`});}
+    aa=aa%nn;steps.push({msg:`Reduce: a = ${aa}`});
+  }
+  if(nn!==1){result=0;steps.push({msg:`gcd > 1  →  Jacobi = 0`});}
+  else steps.push({msg:`Final Jacobi symbol (${a}/${n}) = ${result}`});
+  return{sym:result,steps};
+}
+
+function diophantine(a,b,c){
+  const steps=[];const{gcd,x,y}=extGcd(Math.abs(a),Math.abs(b));
+  steps.push({msg:`Extended GCD: gcd(|${a}|, |${b}|) = ${gcd}`});
+  steps.push({msg:`Found: ${Math.abs(a)}·(${x}) + ${Math.abs(b)}·(${y}) = ${gcd}`});
+  if(c%gcd!==0)return{sols:null,steps:[...steps,{msg:`${gcd} ∤ ${c}  →  no integer solutions`}]};
+  const sc=c/gcd;
+  let x0=x*sc*(a<0?-1:1),y0=y*sc*(b<0?-1:1);
+  steps.push({msg:`Particular solution: x₀=${x0},  y₀=${y0}`});
+  steps.push({msg:`Verify: ${a}·${x0} + ${b}·${y0} = ${a*x0+b*y0} = ${c}  ✓`});
+  const bk=b/gcd,ak=a/gcd;
+  steps.push({msg:`General solution: x = ${x0} + (${bk})t`});
+  steps.push({msg:`                  y = ${y0} − (${ak})t,   t ∈ ℤ`});
+  return{x0,y0,bk,ak,gcd,steps};
+}
+
+function fermatLittle(a,p){
+  const steps=[];
+  steps.push({msg:`Fermat's Little Theorem: if p prime and p∤a, then a^(p−1) ≡ 1 (mod p)`});
+  if(!isPrime(p))return{steps:[...steps,{msg:`${p} is NOT prime — theorem doesn't apply`}]};
+  const g=gcdEuclid(a,p).gcd;
+  if(g!==1)return{steps:[...steps,{msg:`gcd(${a},${p}) = ${g} ≠ 1 — precondition fails`}]};
+  steps.push({msg:`${p} is prime  ✓   gcd(${a},${p}) = 1  ✓`});
+  const{result,steps:ps}=modPow(a,p-1,p);steps.push(...ps);
+  steps.push({msg:`${a}^(${p}−1) ≡ ${result} (mod ${p}) — Theorem ${result===1?'✓ CONFIRMED':'✗ FAILED'}`});
+  return{result,steps};
+}
+
+function wilsonThm(p){
+  const steps=[];
+  steps.push({msg:`Wilson's Theorem: p prime  ⟺  (p−1)! ≡ −1 (mod p)`});
+  if(p<2)return{steps:[...steps,{msg:`p must be ≥ 2`}]};
+  let fact=1;
+  for(let i=2;i<p;i++){fact=(fact*i)%p;steps.push({msg:`${i}! mod ${p} = ${fact}`});}
+  const ok=fact===p-1;
+  steps.push({msg:`(${p}−1)! ≡ ${fact} (mod ${p}) ≡ ${ok?'−1':''+fact}  →  ${p} ${ok?'IS prime  ✓':'is NOT prime  ✗'}`});
+  return{result:fact,isPrimep:ok,steps};
+}
+
+// ═══════════════════════ RENDER HELPERS ═══════════════════════
+
+function resultBox(answer,steps,badge=''){
+  const badgeHtml=badge?`<span class="badge ${badge.cls}">${badge.txt}</span>`:'';
+  return `
+<div class="result-box">
+  <div class="result-header"><span>▸ STEP-BY-STEP SOLUTION</span>${badgeHtml}</div>
+  ${answer?`<div class="result-answer">${answer}</div>`:''}
+  <div class="steps">${steps.map((s,i)=>`
+    <div class="step" style="animation-delay:${i*0.025}s">
+      <span class="step-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="step-msg">${esc(s.msg)}</span>
+    </div>`).join('')}
+  </div>
+</div>`;
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function num(id){return parseInt(document.getElementById(id)?.value||'0');}
+function val(id){return document.getElementById(id)?.value||'';}
+function out(id,html){const el=document.getElementById(id);if(el)el.innerHTML=html;}
+
+// ═══════════════════════ PANEL TEMPLATES ═══════════════════════
+
+const TABS=[
+  {id:'gcd',label:'GCD / Ext. GCD'},
+  {id:'prime',label:'Primality & Factors'},
+  {id:'modpow',label:'Mod Exponentiation'},
+  {id:'congruence',label:'Linear Congruence'},
+  {id:'crt',label:'CRT'},
+  {id:'totient',label:"Euler's Totient"},
+  {id:'fermat',label:'Fermat / Wilson'},
+  {id:'legendre',label:'Legendre / Jacobi'},
+  {id:'diophantine',label:'Diophantine Eq.'},
+];
+
+const PANELS={
+
+gcd:`<h2>GCD Algorithms</h2>
+<p class="desc">Compute gcd(a, b) via the Euclidean Algorithm, or find coefficients x, y such that ax + by = gcd(a, b) via the Extended Euclidean Algorithm.</p>
+<div class="inputs">
+  <div class="field"><label>a</label><input id="ga" value="252"/></div>
+  <div class="field"><label>b</label><input id="gb" value="105"/></div>
+  <div class="field"><label>Algorithm</label>
+    <select id="gmode"><option value="e">Euclidean</option><option value="x">Extended</option></select>
+  </div>
+  <button class="btn" onclick="doGcd()">COMPUTE</button>
+</div><div id="gout"></div>`,
+
+prime:`<h2>Primality & Factorization</h2>
+<p class="desc">Check primality by trial division, or find the prime factorization of n via successive division.</p>
+<div class="inputs">
+  <div class="field"><label>n</label><input id="pn" value="97"/></div>
+  <div class="field"><label>Mode</label>
+    <select id="pmode"><option value="p">Primality Test</option><option value="f">Factorization</option></select>
+  </div>
+  <button class="btn" onclick="doPrime()">COMPUTE</button>
+</div><div id="pout"></div>`,
+
+modpow:`<h2>Fast Modular Exponentiation</h2>
+<p class="desc">Compute base^exp mod n using repeated squaring (binary exponentiation). Runs in O(log exp) multiplications — essential for RSA and Diffie-Hellman.</p>
+<div class="inputs">
+  <div class="field"><label>base</label><input id="mb" value="3"/></div>
+  <div class="field"><label>exponent</label><input id="me" value="200"/></div>
+  <div class="field"><label>modulus</label><input id="mm" value="17"/></div>
+  <button class="btn" onclick="doModpow()">COMPUTE</button>
+</div><div id="mout"></div>`,
+
+congruence:`<h2>Linear Congruence</h2>
+<p class="desc">Solve ax ≡ b (mod m). A solution exists iff gcd(a,m) | b. The Extended Euclidean Algorithm finds all incongruent solutions.</p>
+<div class="inputs">
+  <div class="field"><label>a</label><input id="ca" value="5"/></div>
+  <div class="field"><label>b</label><input id="cb" value="3"/></div>
+  <div class="field"><label>m</label><input id="cm" value="7"/></div>
+  <button class="btn" onclick="doCong()">SOLVE</button>
+</div><div id="cout"></div>`,
+
+crt:`<h2>Chinese Remainder Theorem</h2>
+<p class="desc">Solve a system x ≡ aᵢ (mod mᵢ) where the moduli are pairwise coprime. Guaranteed unique solution mod N = ∏mᵢ.</p>
+<div class="crt-tags" id="ctags"></div>
+<div class="inputs">
+  <div class="field"><label>a</label><input id="cta" value="2" class="wide"/></div>
+  <div class="field"><label>m</label><input id="ctm" value="5" class="wide"/></div>
+  <button class="btn btn-accent btn-sm" onclick="addCrt()">+ ADD</button>
+  <button class="btn" onclick="doCrt()" style="margin-left:auto">SOLVE SYSTEM</button>
+</div><div id="crout"></div>`,
+
+totient:`<h2>Euler's Totient Function</h2>
+<p class="desc">φ(n) counts integers 1 ≤ k ≤ n with gcd(k,n)=1. Formula: φ(n) = n · ∏(1−1/p) over distinct prime divisors p of n.</p>
+<div class="inputs">
+  <div class="field"><label>n</label><input id="tn" value="36"/></div>
+  <button class="btn" onclick="doTotient()">COMPUTE</button>
+</div><div id="tout"></div>`,
+
+fermat:`<h2>Fermat's Little Theorem & Wilson's Theorem</h2>
+<p class="desc">Fermat: a^(p−1) ≡ 1 (mod p) for prime p with p∤a. Wilson: p is prime ⟺ (p−1)! ≡ −1 (mod p).</p>
+<div class="inputs">
+  <div class="field"><label>a</label><input id="fa" value="3"/></div>
+  <div class="field"><label>p</label><input id="fp" value="7"/></div>
+  <div class="field"><label>Theorem</label>
+    <select id="fmode"><option value="f">Fermat's Little</option><option value="w">Wilson's</option></select>
+  </div>
+  <button class="btn" onclick="doFermat()">VERIFY</button>
+</div><div id="fout"></div>`,
+
+legendre:`<h2>Legendre & Jacobi Symbols</h2>
+<p class="desc">Legendre (a/p): determines if a is a quadratic residue mod odd prime p. Jacobi (a/n): generalization to odd composite n, used in quadratic reciprocity.</p>
+<div class="inputs">
+  <div class="field"><label>a</label><input id="la" value="5"/></div>
+  <div class="field"><label>p or n</label><input id="lp" value="11"/></div>
+  <div class="field"><label>Symbol</label>
+    <select id="lmode"><option value="l">Legendre</option><option value="j">Jacobi</option></select>
+  </div>
+  <button class="btn" onclick="doLegendre()">COMPUTE</button>
+</div><div id="lout"></div>`,
+
+diophantine:`<h2>Linear Diophantine Equations</h2>
+<p class="desc">Solve ax + by = c in integers. Integer solutions exist iff gcd(a,b) | c. The Extended Euclidean Algorithm gives a particular solution; the general form follows by parametric family.</p>
+<div class="inputs">
+  <div class="field"><label>a</label><input id="da" value="12"/></div>
+  <div class="field"><label>b</label><input id="db" value="8"/></div>
+  <div class="field"><label>c</label><input id="dc" value="4"/></div>
+  <button class="btn" onclick="doDio()">SOLVE</button>
+</div><div id="dout"></div>`,
+};
+
+// ═══════════════════════ ACTIONS ═══════════════════════
+
+function doGcd(){
+  const a=num('ga'),b=num('gb'),mode=val('gmode');
+  if(mode==='e'){
+    const{gcd,steps}=gcdEuclid(a,b);
+    out('gout',resultBox(`gcd(${a}, ${b}) = ${gcd}`,steps.map(s=>({msg:`${s.a} = ${s.q} × ${s.b} + ${s.r}`}))));
+  } else {
+    const{gcd,x,y,steps}=extGcd(a,b);
+    const allSteps=steps.map(s=>({msg:`q=${s.q}:  r=${s.r},  s=${s.s},  t=${s.t}`}));
+    allSteps.push({msg:`Result: gcd(${a},${b}) = ${gcd} = (${x})·${a} + (${y})·${b}`});
+    out('gout',resultBox(`gcd(${a}, ${b}) = ${gcd}   →   ${x}·${a} + ${y}·${b} = ${gcd}`,allSteps));
+  }
+}
+
+function doPrime(){
+  const n=num('pn'),mode=val('pmode');
+  if(mode==='p'){
+    const{prime,steps}=primalityTest(n);
+    out('pout',resultBox(`${n} is ${prime?'PRIME':'COMPOSITE'}`,steps,prime?{cls:'badge-prime',txt:'PRIME'}:{cls:'badge-composite',txt:'COMPOSITE'}));
+  } else {
+    const{display,steps}=factorize(n);
+    out('pout',resultBox(`${n} = ${display}`,steps));
+  }
+}
+
+function doModpow(){
+  const b=num('mb'),e=num('me'),m=num('mm');
+  if(m<=0)return out('mout','<div class="error">Modulus must be > 0</div>');
+  const{result,steps}=modPow(b,e,m);
+  out('mout',resultBox(`${b}^${e} ≡ ${result} (mod ${m})`,steps,{cls:'badge-neutral',txt:'RESULT: '+result}));
+}
+
+function doCong(){
+  const a=num('ca'),b=num('cb'),m=num('cm');
+  const res=linearCongruence(a,b,m);
+  if(!res.sols){out('cout',resultBox(`No solution: ${a}x ≡ ${b} (mod ${m})`,res.steps,{cls:'badge-no',txt:'NO SOLUTION'}));return;}
+  out('cout',resultBox(`x ≡ {${res.sols.join(', ')}} (mod ${res.mod})  [from ${res.gcd} solution(s)]`,res.steps,{cls:'badge-yes',txt:res.sols.length+' SOLUTION(S)'}));
+}
+
+let crtList=[{a:2,m:3},{a:3,m:5},{a:1,m:7}];
+function renderCrtTags(){
+  document.getElementById('ctags').innerHTML=crtList.map((c,i)=>
+    `<span class="crt-tag" onclick="removeCrt(${i})">x ≡ ${c.a} (mod ${c.m}) ×</span>`
+  ).join('');
+}
+function addCrt(){
+  const a=parseInt(val('cta')),m=parseInt(val('ctm'));
+  if(isNaN(a)||isNaN(m)||m<1)return;
+  crtList.push({a,m});renderCrtTags();
+}
+function removeCrt(i){crtList.splice(i,1);renderCrtTags();}
+function doCrt(){
+  if(crtList.length<2)return out('crout','<div class="error">Need at least 2 congruences</div>');
+  try{const{x,N,steps}=crt(crtList);out('crout',resultBox(`x ≡ ${x} (mod ${N})`,steps,{cls:'badge-yes',txt:'UNIQUE SOLUTION'}));}
+  catch(e){out('crout',`<div class="error">${e.message}</div>`);}
+}
+
+function doTotient(){
+  const n=num('tn');
+  if(n<1)return;
+  const{phi,steps}=eulerTotient(n);
+  const extra=[...steps,{msg:`φ(${n}) = ${phi}: there are ${phi} integers in [1,${n}] coprime to ${n}`}];
+  out('tout',resultBox(`φ(${n}) = ${phi}`,extra,{cls:'badge-neutral',txt:'φ = '+phi}));
+}
+
+function doFermat(){
+  const a=num('fa'),p=num('fp'),mode=val('fmode');
+  if(mode==='f'){
+    const res=fermatLittle(a,p);
+    out('fout',resultBox(res.result!==undefined?`${a}^(${p}−1) ≡ ${res.result} (mod ${p})`:'Cannot verify',res.steps));
+  } else {
+    const res=wilsonThm(p);
+    out('fout',resultBox(`(${p}−1)! ≡ ${res.result} (mod ${p})`,res.steps,
+      res.isPrimep!==undefined?{cls:res.isPrimep?'badge-prime':'badge-composite',txt:res.isPrimep?'PRIME':'NOT PRIME'}:''));
+  }
+}
+
+function doLegendre(){
+  const a=num('la'),p=num('lp'),mode=val('lmode');
+  if(mode==='l'){
+    const{sym,steps}=legendreSymbol(a,p);
+    out('lout',resultBox(`(${a}/${p}) = ${sym}`,steps,
+      sym===1?{cls:'badge-yes',txt:'QR'}:sym===-1?{cls:'badge-no',txt:'QNR'}:{cls:'badge-neutral',txt:'0'}));
+  } else {
+    const{sym,steps}=jacobiSymbol(a,p);
+    out('lout',resultBox(`Jacobi (${a}/${p}) = ${sym}`,steps,{cls:'badge-neutral',txt:'SYMBOL: '+sym}));
+  }
+}
+
+function doDio(){
+  const a=num('da'),b=num('db'),c=num('dc');
+  const res=diophantine(a,b,c);
+  if(!res.sols){out('dout',resultBox(`${a}x + ${b}y = ${c} — No integer solution`,res.steps,{cls:'badge-no',txt:'NO SOLUTION'}));return;}
+  out('dout',resultBox(`x = ${res.x0} + (${res.bk})t,  y = ${res.y0} − (${res.ak})t   (t ∈ ℤ)`,res.steps,{cls:'badge-yes',txt:'SOLVABLE'}));
+}
+
+// ═══════════════════════ ROUTER ═══════════════════════
+
+let active='gcd';
+function render(){
+  // tabs
+  document.getElementById('tabs').innerHTML=TABS.map(t=>
+    `<button class="tab${t.id===active?' active':''}" onclick="go('${t.id}')">${t.label}</button>`
+  ).join('');
+  // panel
+  document.getElementById('panel').innerHTML=PANELS[active];
+  // CRT needs extra init
+  if(active==='crt')renderCrtTags();
+}
+
+function go(id){active=id;render();}
+
+render();
+</script>
+</body>
+</html>
